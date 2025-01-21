@@ -22,3 +22,7 @@
    ```bash
    pip install -r requirements.txt
    ```
+2. Lancez les tests : 
+    ```bash
+    python -m unittest discover -s tests
+   ```
