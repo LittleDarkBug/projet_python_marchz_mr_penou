@@ -22,5 +22,12 @@ class TestMarchand(unittest.TestCase):
         self.assertIsNone(self.marchand.x)
         self.assertIsNone(self.marchand.y)
 
+    def test_save(self):
+        """Vérifie que la méthode save fonctionne correctement."""
+        self.marchand.save()
+        # Vérifiez ici que le marchand a bien été sauvegardé dans la base de données
+        # Vous pouvez utiliser une bibliothèque de test de base de données comme pytest-db
+
+
 if __name__ == '__main__':
     unittest.main()

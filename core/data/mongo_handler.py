@@ -21,6 +21,9 @@ class MongoDBHandler:
         try:
             # Utilise la connexion singleton
             self.connection = MongoDBConnection()
+            #initialise la connexion à partir su singleton si non intialisé
+            if self.connection.db == None:
+                self.connection._initialize_connection()
             # Récupère la base de données
             self.db = self.connection.get_db()
             # Sélectionne la collection
