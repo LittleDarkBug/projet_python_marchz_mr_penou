@@ -2,14 +2,19 @@ import unittest
 from core.classes.Marchand import Marchand
 from core.classes.EspaceMarche import EspaceMarche
 from core.enums.TypeMarchandEnum import TypeMarchandEnum
+from core.dependency_injection.container import Container
+  #
 
 class TestEspaceMarche(unittest.TestCase):
     
     def setUp(self):
+        self.container = Container()  # Créez une instance du container
+        self.container.init_resources()  # Charge toutes les ressources de l'application
+        self.container.wire()
         """Initialisation d'un espace marché et de quelques marchands pour les tests."""
         self.espace_marche = EspaceMarche(nom="Marché Central", taille=(5, 5))  # Un espace de marché de 5x5
-        self.marchand_1 = Marchand(nom="Dupont", prenom="Pierre", telephone="123456789", adresse="1 Rue de Paris", description="Marchand de fruits", type_marchand=TypeMarchandEnum.DETAILLANT)
-        self.marchand_2 = Marchand(nom="Lemoine", prenom="Julie", telephone="987654321", adresse="2 Rue de Lyon", description="Marchand de légumes", type_marchand=TypeMarchandEnum.DETAILLANT)
+        self.marchand_1 = Marchand(nom="Dupont", prenom="Pierre", telephone="123456789", adresse="1 Rue de Paris", description="Marchand de fruits", type_marchand=TypeMarchandEnum.DETAILLANT, username="gorvfff", password="ranza")
+        self.marchand_2 = Marchand(nom="Lemoine", prenom="Julie", telephone="987654321", adresse="2 Rue de Lyon", description="Marchand de légumes", type_marchand=TypeMarchandEnum.DETAILLANT, username='kilomo', password="filo")
 
     def test_ajouter_marchand_position_libre(self):
         """Test pour l'ajout d'un marchand à une position libre."""
@@ -21,8 +26,9 @@ class TestEspaceMarche(unittest.TestCase):
     def test_ajouter_marchand_position_occupee(self):
         """Test pour l'ajout d'un marchand à une position déjà occupée."""
         self.espace_marche.ajouter_marchand(self.marchand_1, 2, 3)
-        # Essayer d'ajouter un autre marchand à la même position
-        self.espace_marche.ajouter_marchand(self.marchand_2, 2, 3)
+        # Essayer d'ajouter un autre marchand à la même position (doit lever une ValueError)
+        with self.assertRaises(ValueError):
+            self.espace_marche.ajouter_marchand(self.marchand_2, 2, 3)
         self.assertEqual(self.marchand_2.x, None)  # Il ne doit pas être placé
         self.assertEqual(self.marchand_2.y, None)
         self.assertNotIn(self.marchand_2, self.espace_marche.marchands)
