@@ -22,8 +22,8 @@ class MongoDBHandler:
             # Utilise la connexion singleton
             self.connection = MongoDBConnection()
             #initialise la connexion à partir su singleton si non intialisé
-            if self.connection.db == None:
-                self.connection._initialize_connection()
+            if self.connection.db is None:
+                self.connection.initialize_connection()
             # Récupère la base de données
             self.db = self.connection.get_db()
             # Sélectionne la collection
@@ -42,7 +42,7 @@ class MongoDBHandler:
             PyMongoError: Si l'insertion échoue.
         """
         try:
-            self.collection.insert_one(data)
+            return self.collection.insert_one(data)
         except PyMongoError as e:
             raise PyMongoError(f"Erreur lors de l'insertion du document : {e}")
     

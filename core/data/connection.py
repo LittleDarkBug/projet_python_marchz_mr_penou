@@ -19,10 +19,10 @@ class MongoDBConnection:
         """
         if not cls._instance:
             cls._instance = super(MongoDBConnection, cls).__new__(cls)
-            cls._instance._initialize_connection(*args, **kwargs)
+            cls._instance.initialize_connection(*args, **kwargs)
         return cls._instance
 
-    def _initialize_connection(self, host='localhost', port=27017, database_name='mrplenou', username= 'admin', password='admin'):
+    def initialize_connection(self, host='localhost', port=27017, database_name='mrplenou', username='admin', password='admin'):
         """
         Initialise la connexion à MongoDB.
         

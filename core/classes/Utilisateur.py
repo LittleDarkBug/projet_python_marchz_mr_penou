@@ -1,3 +1,4 @@
+from core.utils.PasswordUtils import PasswordUtils
 from dependency_injector.wiring import inject, Provide
 from core.dependency_injection.container import Container
 from core.data.mongo_handler import MongoDBHandler
@@ -12,6 +13,8 @@ class Utilisateur:
         telephone: str,
         adresse: str,
         description: str,
+        username: str,
+        password: str,
         mongo_handler: MongoDBHandler = Provide[Container.user_handler],
         id: str = None  # Ajout d'un ID pour les utilisateurs existants
     ) -> None:
@@ -22,6 +25,8 @@ class Utilisateur:
             nom (str): Le nom de l'utilisateur.
             prenom (str): Le prénom de l'utilisateur.
             telephone (str): Le numéro de téléphone de l'utilisateur.
+            username (str) : Le pseudo d'utilisateur.
+            password (str) : mot de passe utilisateur.
             adresse (str): L'adresse de l'utilisateur.
             description (str): Une description de l'utilisateur.
             mongo_handler (MongoDBHandler): Le handler MongoDB injecté automatiquement.
@@ -31,6 +36,8 @@ class Utilisateur:
         self._nom = nom
         self._prenom = prenom
         self._telephone = telephone
+        self._username = username
+        self._password = PasswordUtils.hash_password(password)
         self._adresse = adresse
         self._description = description
         self.mongo_handler = mongo_handler
@@ -55,6 +62,22 @@ class Utilisateur:
     @prenom.setter
     def prenom(self, value: str) -> None:
         self._prenom = value
+    
+    @property
+    def username(self) -> str:
+        return self._username
+    
+    @username.setter
+    def username(self, value: str) -> None:
+        self._username = value
+    
+    @property
+    def password(self) -> str:
+        return self._password
+    
+    @password.setter
+    def password(self, value: str) -> None:
+        self._password = PasswordUtils.hash_password(value)
 
     @property
     def telephone(self) -> str:
@@ -90,7 +113,9 @@ class Utilisateur:
             'prenom': self._prenom,
             'telephone': self._telephone,
             'adresse': self._adresse,
-            'description': self._description
+            'description': self._description,
+            'password': self._password,
+            'username': self._username
         }
         if self._id:
             # Met à jour l'utilisateur existant
