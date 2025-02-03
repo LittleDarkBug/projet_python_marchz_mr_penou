@@ -5,6 +5,7 @@ from demos.optimisation_recherche import demo_optimisation_recherche
 from demos.espace_marche import demo_espace_marche
 import time
 from demos.marchands_produits import demo_creation_marche_et_marchands
+from rich import print
 
 class Session:
     def __init__(self):
@@ -131,10 +132,15 @@ class Session:
                 break
             else:
                 print("Choix invalide. Veuillez choisir une option entre 1 et 5.")
+    
+    def fermer(self): 
+        """ Ferme le programme definitivement."""
+        print("Fermeture du programme.")
+        exit()
 
 
 def afficher_menu():
-    """Affiche le menu principal avec un art ASCII pour MrPlenou."""
+    """Affiche le menu principal avec  pour MrPlenou."""
     print(r"""
         
     ___ ___  ____       ____  _        ___  ____    ___   __ __ 
