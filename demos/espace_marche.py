@@ -2,6 +2,7 @@ from core.classes.EspaceMarche import EspaceMarche
 from core.classes.Marchand import Marchand
 from core.enums.TypeMarchandEnum import TypeMarchandEnum
 from core.data.connection import initialize_connection, close_connection
+from rich import print
 
 def demo_espace_marche():
     """
@@ -11,6 +12,10 @@ def demo_espace_marche():
     
     # Initialisation de la connexion MongoDB
     initialize_connection(host='localhost', port=27017, database_name='mrplenou', username='admin', password='admin')
+
+    #Supression de la base de données
+    Marchand.objects.delete()
+    EspaceMarche.objects.delete()
 
     # Créer un espace de marché de taille 15x15
     espace_marche = EspaceMarche(nom="Marché ASSIGAME", taille=(15, 15))
@@ -25,8 +30,8 @@ def demo_espace_marche():
         username="jdupont",
         password="password123",
         description="Vendeur de fruits et légumes",
-        type_marchand=TypeMarchandEnum.GROSSISTE  # Type : Grossiste
-    )
+        type_marchand=TypeMarchandEnum.GROSSISTE.value  # Type : Grossiste
+    ).save_marchand()
 
     marchand2 = Marchand(
         nom="Martin",
@@ -36,8 +41,8 @@ def demo_espace_marche():
         username="mmartin",
         password="password456",
         description="Vendeuse de vêtements",
-        type_marchand=TypeMarchandEnum.DETAILLANT  # Type : Détaillant
-    )
+        type_marchand=TypeMarchandEnum.DETAILLANT.value  # Type : Détaillant
+    ).save_marchand()
 
     marchand3 = Marchand(
         nom="Leroy",
@@ -47,8 +52,9 @@ def demo_espace_marche():
         username="lleroy",
         password="password789",
         description="Vendeur de bijoux",
-        type_marchand=TypeMarchandEnum.MIXTE  # Type : Mixte
-    )
+        type_marchand=TypeMarchandEnum.MIXTE.value  # Type : Mixte
+    ).save_marchand()
+
 
     # Ajouter les marchands à l'espace de marché
     try:

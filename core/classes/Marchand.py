@@ -3,14 +3,9 @@ from core.classes.Utilisateur import Utilisateur
 from core.enums.TypeMarchandEnum import TypeMarchandEnum
 from core.classes.Produit import Produit
 from core.utils.PasswordUtils import PasswordUtils
+from rich import print
 
 class Marchand(Utilisateur):
-    nom = StringField(required=True)
-    prenom = StringField(required=True)
-    telephone = StringField(required=True)
-    adresse = StringField(required=True)
-    username = StringField(required=True, unique=True)
-    password = StringField(required=True)
     description = StringField()
     type_marchand = StringField(required=True)
     x = IntField(default=0)
@@ -70,10 +65,8 @@ class Marchand(Utilisateur):
         """Recherche un marchand par son ID."""
         return cls.objects(id=id).first()
 
-    def save_marchand(self) -> None:
-        """Sauvegarde le marchand dans la base de données."""
-        self.password = PasswordUtils.hash_password(self.password)
-        self.save()
+    def save_marchand(self, *args, **kwargs) -> None:
+        return super().save(*args, **kwargs)
 
     def delete_marchand(self) -> None:
         """Supprime le marchand de la base de données."""
