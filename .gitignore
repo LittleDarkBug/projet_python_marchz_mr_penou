@@ -6,3 +6,6 @@ env
 /.idea/projet_python_marchz_mr_penou.iml
 /.idea/vcs.xml
 *__pycache__
+core/classes/__pycache__
+tests/__pycache__
+core/data/__pycache__
