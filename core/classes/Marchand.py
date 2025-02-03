@@ -17,9 +17,6 @@ class Marchand(Utilisateur):
     y = IntField(default=0)
     produits = ListField(ReferenceField(Produit), default=[])
 
-    meta = {
-        'collection': 'marchand'
-    }
 
     def __str__(self):
         return (
@@ -75,7 +72,7 @@ class Marchand(Utilisateur):
 
     def save_marchand(self) -> None:
         """Sauvegarde le marchand dans la base de données."""
-        self.password = str(PasswordUtils.hash_password(self.password))
+        self.password = PasswordUtils.hash_password(self.password)
         self.save()
 
     def delete_marchand(self) -> None:
