@@ -24,7 +24,12 @@ class EspaceMarche(Document):
         Returns:
             bool: True si la position est libre, False sinon.
         """
-        return all(marchand.x != x or marchand.y != y for marchand in self.marchands)
+        for marchand_ref in self.marchands:
+            # Charger le marchand complet depuis la référence
+            marchand = Marchand.objects(id=marchand_ref.id).first()
+            if marchand and marchand.x == x and marchand.y == y:
+                return False
+        return True
 
     def ajouter_marchand(self, marchand: Marchand, x: int, y: int) -> None:
         """
@@ -39,12 +44,22 @@ class EspaceMarche(Document):
             ValueError: Si la position est déjà occupée.
         """
         if self.est_position_libre(x, y):
+            print("im here")
             marchand.x = x  # Assigner la position x au marchand
             marchand.y = y  # Assigner la position y au marchand
             self.marchands.append(marchand)  # Ajouter le marchand au marché
             marchand.save()  # Sauvegarder le marchand dans la base de données
+            self.save()
         else:
             raise ValueError(f"La position ({x}, {y}) est déjà occupée.")
+    
+    def retirer_marchand(self, marchand: Marchand) -> None:
+        """
+        Retire un marchand de l'espace de marché.
+        """
+        self.marchands.remove(marchand)
+        marchand.save()
+        self.save()
 
     def obtenir_emplacements_libres(self) -> List[Tuple[int, int]]:
         """
@@ -76,9 +91,13 @@ class EspaceMarche(Document):
                 return "orange"  # Stock moyen
             else:
                 return "red"  # Stock faible
-            
-        for marchand in self.marchands:
-            marchand.reload()
+
+        for marchand_ref in self.marchands:
+                    # Charger le marchand complet depuis la référence
+            marchand = Marchand.objects(id=marchand_ref.id).first()
+            print(marchand)
+            if not marchand:
+                continue
             stock = marchand.niveau_de_stock  # Retourne un entier
             couleur = determiner_couleur(stock)
 

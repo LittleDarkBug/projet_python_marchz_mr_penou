@@ -9,13 +9,19 @@ from core.classes.LigneVente import LigneVente
 from core.classes.FactureVente import FactureVente
 from core.enums.ModaliteVenteEnum import ModaliteVenteEnum
 from core.data.connection import initialize_connection
+from rich import print
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+
+console = Console()
 
 def demo_achats():
     """
     Démonstration complète de la création d'un marché, l'ajout de marchands et de produits,
     l'achat par un client et la génération d'une facture.
     """
-    initialize_connection()
+    initialize_connection(database_name='mrplenou_demo')
     # Réinitialisation de la base de données
     EspaceMarche.objects.delete()
     Marchand.objects.delete()
@@ -23,10 +29,11 @@ def demo_achats():
     Client.objects.delete()
     FactureVente.objects.delete()
     LigneVente.objects.delete()
+
     # Création de l'espace de marché
     espace_marche = EspaceMarche(nom="Marché Central", taille=[50, 50])
     espace_marche.save()
-    
+
     # Ajout de marchands avec des positions aléatoires
     marchands = []
     for i in range(3):
@@ -40,7 +47,7 @@ def demo_achats():
         marchand.save()
         marchands.append(marchand)
     espace_marche.save()
-    
+
     # Ajout de produits aux marchands
     produits = []
     for i in range(10):
@@ -53,16 +60,16 @@ def demo_achats():
         marchand.ajouter_produit(produit)
         marchand.save()
         produits.append(produit)
-    
+
     # Création d'un client
-    client = Client(username="client1", password="clientpass" , nom="Doe", prenom="John", telephone="0612345678", adresse="123 Rue de la Ville")
+    client = Client(username="client1", password="clientpass", nom="Doe", prenom="John", telephone="0612345678", adresse="123 Rue de la Ville")
     client.save()
-    
+
     # Simulation d'un achat
     quantites_achetees = {produits[0]: 2, produits[1]: 3}
     lignes_vente = []
     total_prix = 0
-    
+
     for produit, quantite in quantites_achetees.items():
         if produit.quantite >= quantite:
             produit.quantite -= quantite
@@ -72,7 +79,7 @@ def demo_achats():
             ligne.save()
             lignes_vente.append(ligne)
             total_prix += prix_total_ligne
-    
+
     # Création de la facture
     facture = FactureVente(
         prix_total=total_prix, numero_vente="V12345", date_vente=datetime.now(),
@@ -81,30 +88,28 @@ def demo_achats():
     facture.save()
     client.add_achat(facture)
     client.save()
-    
-    # Affichage de l'état final
-    print("\nFacture générée :")
-    # Affichage de la facture (si elle contient plusieurs informations, vous pouvez les formater ici)
-    print(facture)
 
-    print("\nStock restant des marchands :")
-    # Bordure de tableau
-    print("=" * 50)
-    print(f"{'Nom du Marchand':<30} {'Produit':<20} {'Quantité':<10}")
-    print("=" * 50)
+    # Affichage stylisé de la facture
+    console.print("\n[bold green]Facture générée :[/bold green]", style="bold white")
+    console.print(facture, style="italic cyan")
+
+    # Affichage du stock restant des marchands dans un tableau
+    console.print("\n[bold yellow]Stock restant des marchands :[/bold yellow]")
+    table = Table(title="Stocks des Marchands", caption="Quantité des produits restants")
+    table.add_column("Nom du Marchand", style="cyan", width=20)
+    table.add_column("Produit", style="magenta", width=30)
+    table.add_column("Quantité", justify="right", style="green")
 
     for marchand in marchands:
         marchand.reload()
         for produit in marchand.produits:
-            # Affichage avec une ligne bien formatée pour chaque produit
-            print(f"{marchand.nom:<30} {produit.libelle:<20} {produit.quantite:<10}")
+            table.add_row(marchand.nom, produit.libelle, str(produit.quantite))
 
-    # Bordure finale
-    print("=" * 50)
+    console.print(table)
 
-    
     # Affichage du marché
-    print(espace_marche)
-    
+    console.print("\n[bold cyan]Espace Marché :[/bold cyan]", style="bold white")
+    console.print(espace_marche, style="italic yellow")
+
 if __name__ == "__main__":
     demo_achats()

@@ -6,7 +6,7 @@ class TestConnectionLayer(unittest.TestCase):
 
     def setUp(self):
         """Initialiser une connexion à MongoDB pour les tests."""
-        initialize_connection()
+        initialize_connection(database_name='mrplenou_tests')
         
     def tearDown(self):
         """Fermer la connexion après chaque test."""

@@ -9,13 +9,20 @@ from core.classes.LigneVente import LigneVente
 from core.classes.FactureVente import FactureVente
 from core.enums.ModaliteVenteEnum import ModaliteVenteEnum
 from core.data.connection import initialize_connection
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
+from rich.table import Table
+from rich import box
+
+console = Console()
 
 def demo_historique():
     """
     Démonstration complète de la création d'un marché, l'ajout de marchands et de produits,
     l'achat par un client et la génération d'une facture, suivi des ventes et des statistiques par marchand.
     """
-    initialize_connection()
+    initialize_connection(database_name='mrplenou_demo')
     # Réinitialisation de la base de données
     EspaceMarche.objects.delete()
     Marchand.objects.delete()
@@ -84,11 +91,14 @@ def demo_historique():
         client.add_achat(facture)
         client.save()
 
+
     # Affichage de l'historique des ventes et des statistiques
-    print("\nHistorique des ventes par marchand :")
-    print("=" * 60)
-    print(f"{'Nom du Marchand':<30} {'Produit':<20} {'Quantité':<10} {'Total Ventes':<15}")
-    print("=" * 60)
+    console.print("\n[bold cyan]Historique des ventes par marchand :[/bold cyan]")
+    table = Table(title="Historique des Ventes", box=box.ROUNDED, show_header=True, header_style="bold green")
+    table.add_column("Nom du Marchand", style="dim", width=30)
+    table.add_column("Produit", style="bold", width=20)
+    table.add_column("Quantité", justify="right", width=10)
+    table.add_column("Total Ventes", justify="right", width=15)
 
     for marchand in marchands:
         marchand.reload()
@@ -100,14 +110,14 @@ def demo_historique():
                     if ligne.produit == produit:
                         ventes_par_produit += ligne.quantite
             total_ventes_marchand += ventes_par_produit * produit.prix_vente
-            # Affichage des ventes par produit
-            print(f"{marchand.nom:<30} {produit.libelle:<20} {ventes_par_produit:<10} {ventes_par_produit * produit.prix_vente:<15}")
+            # Ajouter les lignes à la table
+            table.add_row(marchand.nom, produit.libelle, str(ventes_par_produit), f"{ventes_par_produit * produit.prix_vente}FCFA")
         
-        # Affichage du total des ventes du marchand
-        print("-" * 60)
-        print(f"{'Total Ventes (marchand)':<50} {total_ventes_marchand:<15}")
-        print("=" * 60)
-    
+        # Ajouter une ligne de total des ventes du marchand
+        table.add_row(f"[bold]{marchand.nom}[/bold]", "[bold]Total[/bold]", "", f"{total_ventes_marchand}FCFA")
+
+    console.print(table)
+
     # Affichage du marché
     print(espace_marche)
 
