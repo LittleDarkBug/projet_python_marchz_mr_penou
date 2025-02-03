@@ -10,6 +10,10 @@ class Admin(Utilisateur):
             f"=== Admin ===\n"
             f"ID: {self.id}\n"
             f"Nom d'utilisateur: {self.username}\n"
+            f"Nom: {self.nom}\n"
+            f"Prenom: {self.prenom}\n"
+            f"Téléphone: {self.telephone}\n"
+            f"Adresse: {self.adresse}\n"
             "================="
         )
 

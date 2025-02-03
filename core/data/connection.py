@@ -15,12 +15,14 @@ def initialize_connection(host='localhost', port=27017, database_name='mrplenou'
         mongoengine.connection.MongoEngineConnectionError: Si la connexion échoue.
     """
     try:
+        me.disconnect()
         me.connect(
             db=database_name,
             username=username,
             password=password,
             host=host,
-            port=port
+            port=port,
+            authentication_source='admin' 
         )
         print(f"Connexion à MongoDB sur {host}:{port}, base de données: {database_name}")
     except me.connection.MongoEngineConnectionError as e:

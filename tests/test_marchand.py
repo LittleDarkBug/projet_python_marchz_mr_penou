@@ -9,7 +9,7 @@ class TestMarchand(unittest.TestCase):
     def setUp(self):
         """Initialisation d'un marché et d'un marchand pour les tests."""
         # Connexion à la base de données MongoDB
-        initialize_connection(host='localhost', port=27017, database_name='mrplenou', username='admin', password='admin')
+        initialize_connection(database_name='mrplenou_tests')
 
         # Suppression des données existantes
         Marchand.objects.delete()
