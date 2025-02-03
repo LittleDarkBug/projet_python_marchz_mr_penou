@@ -10,7 +10,6 @@ class Admin(Utilisateur):
             f"=== Admin ===\n"
             f"ID: {self.id}\n"
             f"Nom d'utilisateur: {self.username}\n"
-            f"Nombre de marchands: {len(self.liste_marchands)}\n"
             "================="
         )
 

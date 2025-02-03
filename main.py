@@ -1,14 +1,18 @@
-from main_utils import afficher_menu, gerer_menu_demos
-
+from init_admin import initialiser_admin
+from main_utils import Session, afficher_menu
 def main():
+    initialiser_admin()
+    session = Session()
+    
     while True:
         choix = afficher_menu()
         if choix == "1":
-            gerer_menu_demos()
+            session.gerer_menu_demos()
         elif choix == "2":
-            pass
+            session.se_connecter()
         elif choix == "3":
-            pass
+            session.fermer()
+            break
         else:
             print("Choix invalide. Veuillez choisir une option entre 1 et 3.")
 

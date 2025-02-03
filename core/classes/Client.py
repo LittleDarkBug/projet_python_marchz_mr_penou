@@ -10,9 +10,6 @@ class Client(Utilisateur):
     """
     liste_achats = ListField(ReferenceField(FactureVente))
 
-    meta = {
-        'collection': 'clients'  # Nom de la collection
-    }
 
 
     def add_achat(self, facture: FactureVente) -> None:

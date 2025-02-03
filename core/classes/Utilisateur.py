@@ -1,4 +1,4 @@
-from mongoengine import Document, StringField
+from mongoengine import Document, StringField, BinaryField
 from core.utils.PasswordUtils import PasswordUtils
 
 class Utilisateur(Document):
@@ -8,14 +8,14 @@ class Utilisateur(Document):
     adresse = StringField(required=True)
     description = StringField()
     username = StringField(required=True, unique=True)
-    password = StringField(required=True)
+    password = BinaryField(required=True)
 
     meta = {'allow_inheritance': True}
 
     def save(self, *args, **kwargs):
         """Hache le mot de passe avant de sauvegarder."""
         if not self.pk:  # Seulement lors de la création
-            self.password = str(PasswordUtils.hash_password(self.password))
+            self.password = PasswordUtils.hash_password(self.password)
         return super().save(*args, **kwargs)
 
     def __str__(self):
