@@ -9,5 +9,4 @@ class NotificationSingletonService:
         return cls._instance
 
     def send_notification(self, notification: Notification) -> None:
-        # Logic to send notification
-        print(f"Notification sent: {notification.type_notification} - {notification.message}")
+        print(f"Notification envoyé: {notification.type_notification} - {notification.message}")

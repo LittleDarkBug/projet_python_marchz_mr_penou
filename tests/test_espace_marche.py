@@ -2,19 +2,32 @@ import unittest
 from core.classes.Marchand import Marchand
 from core.classes.EspaceMarche import EspaceMarche
 from core.enums.TypeMarchandEnum import TypeMarchandEnum
-from core.dependency_injection.container import Container
-  #
+from core.data.connection import initialize_connection, close_connection
 
 class TestEspaceMarche(unittest.TestCase):
     
     def setUp(self):
-        self.container = Container()  # Créez une instance du container
-        self.container.init_resources()  # Charge toutes les ressources de l'application
-        self.container.wire()
         """Initialisation d'un espace marché et de quelques marchands pour les tests."""
+        # Connexion à la base de données MongoDB
+        initialize_connection(host='localhost', port=27017, database_name='mrplenou', username='admin', password='admin')
+
+        # Suppression des données existantes
+        Marchand.objects.delete()
+        EspaceMarche.objects.delete()
+        
+        # Création de l'espace marché
         self.espace_marche = EspaceMarche(nom="Marché Central", taille=(5, 5))  # Un espace de marché de 5x5
-        self.marchand_1 = Marchand(nom="Dupont", prenom="Pierre", telephone="123456789", adresse="1 Rue de Paris", description="Marchand de fruits", type_marchand=TypeMarchandEnum.DETAILLANT, username="gorvfff", password="ranza")
-        self.marchand_2 = Marchand(nom="Lemoine", prenom="Julie", telephone="987654321", adresse="2 Rue de Lyon", description="Marchand de légumes", type_marchand=TypeMarchandEnum.DETAILLANT, username='kilomo', password="filo")
+        
+        # Création de quelques marchands
+        self.marchand_1 = Marchand(nom="Dupont", prenom="Pierre", telephone="123456789", adresse="1 Rue de Paris", 
+                                   description="Marchand de fruits", type_marchand=TypeMarchandEnum.DETAILLANT.value, 
+                                   username="gorvfff", password="ranza")
+        self.marchand_2 = Marchand(nom="Lemoine", prenom="Julie", telephone="987654321", adresse="2 Rue de Lyon", 
+                                   description="Marchand de légumes", type_marchand=TypeMarchandEnum.DETAILLANT.value, 
+                                   username='kilomo', password="filo")
+        
+        self.marchand_1.save_marchand()
+        self.marchand_2.save_marchand()
 
     def test_ajouter_marchand_position_libre(self):
         """Test pour l'ajout d'un marchand à une position libre."""
@@ -29,8 +42,8 @@ class TestEspaceMarche(unittest.TestCase):
         # Essayer d'ajouter un autre marchand à la même position (doit lever une ValueError)
         with self.assertRaises(ValueError):
             self.espace_marche.ajouter_marchand(self.marchand_2, 2, 3)
-        self.assertEqual(self.marchand_2.x, None)  # Il ne doit pas être placé
-        self.assertEqual(self.marchand_2.y, None)
+        self.assertEqual(self.marchand_2.x, 0) # Il ne doit pas être placé
+        self.assertEqual(self.marchand_2.y, 0)
         self.assertNotIn(self.marchand_2, self.espace_marche.marchands)
 
     def test_obtenir_emplacements_libres(self):
@@ -46,6 +59,19 @@ class TestEspaceMarche(unittest.TestCase):
         self.assertTrue(self.espace_marche.est_position_libre(4, 4))  # La position (4, 4) est libre
         self.espace_marche.ajouter_marchand(self.marchand_1, 4, 4)
         self.assertFalse(self.espace_marche.est_position_libre(4, 4))  # La position (4, 4) est maintenant occupée
+
+    def test_affichage_marche(self):
+        """Test pour afficher le marché."""
+        # Ajouter un marchand à une position
+        self.espace_marche.ajouter_marchand(self.marchand_1, 2, 3)
+        self.espace_marche.save()
+        # Afficher le marché
+        print(self.espace_marche)
+
+    def tearDown(self):
+        """Ferme la connexion MongoDB après chaque test."""
+        close_connection()
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,67 +1,18 @@
+from mongoengine import Document, StringField, ListField, IntField, ReferenceField
 from typing import List, Tuple
-from core.dependency_injection.container import Container
-from core.data.mongo_handler import MongoDBHandler
-from bson import ObjectId
-from dependency_injector.wiring import inject, Provide
 from core.classes.Marchand import Marchand
+import plotly.graph_objects as go
 
-class EspaceMarche:
-    @inject
-    def __init__(self,
-                 nom: str,
-                 taille: Tuple[int, int],
-                 mongo_handler: MongoDBHandler = Provide[Container.marche_handler],
-                 id: str = None) -> None:
-        """
-        Initialise un nouvel espace de marché ou charge un espace existant.
 
-        Args:
-            nom (str): Le nom de l'espace de marché.
-            taille (Tuple[int, int]): Les dimensions de l'espace (largeur, hauteur).
-            mongo_handler (MongoDBHandler): Le handler MongoDB injecté automatiquement.
-            id (str): L'ID MongoDB de l'espace de marché (optionnel, pour un espace existant).
-        """
-        self._id = id  # ID MongoDB
-        self._nom = nom
-        self._taille = taille
-        self._marchands = []
-        self._mongo_handler = mongo_handler
-
-    @property
-    def id(self) -> str:
-        """Retourne l'ID MongoDB de l'espace de marché."""
-        return self._id
-
-    @property
-    def nom(self) -> str:
-        """Retourne le nom de l'espace de marché."""
-        return self._nom
-
-    @nom.setter
-    def nom(self, value: str) -> None:
-        """Modifie le nom de l'espace de marché."""
-        self._nom = value
-
-    @property
-    def taille(self) -> Tuple[int, int]:
-        """Retourne les dimensions de l'espace de marché."""
-        return self._taille
-
-    @taille.setter
-    def taille(self, value: Tuple[int, int]) -> None:
-        """Modifie la taille de l'espace de marché."""
-        self._taille = value
-
-    @property
-    def marchands(self) -> List[Marchand]:
-        """Retourne la liste des marchands dans l'espace de marché."""
-        return self._marchands
-
-    @marchands.setter
-    def marchands(self, value: List[Marchand]) -> None:
-        """Modifie la liste des marchands dans l'espace de marché."""
-        self._marchands = value
-
+class EspaceMarche(Document):
+    """
+    Représente un espace de marché dans MongoDB.
+    """
+    nom = StringField(required=True)
+    taille = ListField(IntField(), required=True)  # Taille est une liste de deux entiers [x_max, y_max]
+    marchands = ListField(ReferenceField(Marchand))  # Liste de références à des objets 'Marchand'
+    
+    # Méthodes pour manipuler les marchands et leurs positions
     def est_position_libre(self, x: int, y: int) -> bool:
         """
         Vérifie si la position (x, y) est libre dans l'espace de marché.
@@ -73,7 +24,7 @@ class EspaceMarche:
         Returns:
             bool: True si la position est libre, False sinon.
         """
-        return all(marchand.x != x or marchand.y != y for marchand in self._marchands)
+        return all(marchand.x != x or marchand.y != y for marchand in self.marchands)
 
     def ajouter_marchand(self, marchand: Marchand, x: int, y: int) -> None:
         """
@@ -90,7 +41,8 @@ class EspaceMarche:
         if self.est_position_libre(x, y):
             marchand.x = x  # Assigner la position x au marchand
             marchand.y = y  # Assigner la position y au marchand
-            self._marchands.append(marchand)  # Ajouter le marchand au marché
+            self.marchands.append(marchand)  # Ajouter le marchand au marché
+            marchand.save()  # Sauvegarder le marchand dans la base de données
         else:
             raise ValueError(f"La position ({x}, {y}) est déjà occupée.")
 
@@ -102,83 +54,110 @@ class EspaceMarche:
             List[Tuple[int, int]]: Liste des coordonnées (x, y) des emplacements libres.
         """
         emplacements_libres = []
-        for x in range(self._taille[0]):  # Parcourt les x possibles
-            for y in range(self._taille[1]):  # Parcourt les y possibles
+        for x in range(self.taille[0]):  # Parcourt les x possibles
+            for y in range(self.taille[1]):  # Parcourt les y possibles
                 if self.est_position_libre(x, y):
                     emplacements_libres.append((x, y))  # Ajoute la position libre
         return emplacements_libres
-    
-    @inject
-    def save(self) -> None:
-        """
-        Sauvegarde l'espace de marché dans la base de données MongoDB.
-        Si l'espace de marché a un ID, il est mis à jour. Sinon, un nouvel espace est créé.
-        """
-        data = {
-            'nom': self._nom,
-            'taille': self._taille,
-            'marchands': [marchand.to_dict() for marchand in self._marchands]  # Assumer que Marchand a une méthode to_dict
-        }
-        if self._id:
-            # Met à jour l'espace de marché existant
-            self._mongo_handler.update({'_id': ObjectId(self._id)}, data)
-        else:
-            # Crée un nouvel espace de marché
-            result = self._mongo_handler.save(data)
-            self._id = str(result.inserted_id)  # Stocke le nouvel ID
+
+    def generer_graphique(self):
+        """Génère un graphique interactif affichant les marchands avec des couleurs selon leur niveau de stock."""
+        fig = go.Figure()
+
+        # Définition des seuils de stock
+        seuil_bas = 10   # En dessous de 10 : stock faible
+        seuil_haut = 50  # Au-dessus de 50 : stock élevé
+
+        # Définition des couleurs en fonction du stock
+        def determiner_couleur(stock):
+            if stock > seuil_haut:
+                return "green"  # Stock élevé
+            elif stock >= seuil_bas:
+                return "orange"  # Stock moyen
+            else:
+                return "red"  # Stock faible
             
-    @inject
-    def delete(self) -> None:
-        """
-        Supprime l'espace de marché de la base de données MongoDB.
-        """
-        if self._id:
-            self._mongo_handler.delete({'_id': ObjectId(self._id)})
-            self._id = None  # Réinitialise l'ID après suppression
-        else:
-            raise ValueError("Impossible de supprimer un espace de marché sans ID.")
+        for marchand in self.marchands:
+            marchand.reload()
+            stock = marchand.niveau_de_stock  # Retourne un entier
+            couleur = determiner_couleur(stock)
+
+            info_marchand = (
+                f"Nom: {marchand.nom} {marchand.prenom}<br>"
+                f"Type: {marchand.type_marchand}<br>"
+                f"Téléphone: {marchand.telephone}<br>"
+                f"Description: {marchand.description}<br>"
+                f"Niveau de stock: {stock}"
+            )
+
+            fig.add_trace(go.Scatter(
+                x=[marchand.x], 
+                y=[marchand.y],
+                mode='markers+text',
+                marker=dict(size=12, color=couleur),
+                text=[info_marchand],
+                textposition="top center",
+                name=marchand.username
+            ))
+
+        # Ajout d'une légende explicative
+        fig.add_trace(go.Scatter(x=[None], y=[None], mode='markers', marker=dict(size=12, color="green"), name="Stock élevé (> 50)"))
+        fig.add_trace(go.Scatter(x=[None], y=[None], mode='markers', marker=dict(size=12, color="orange"), name="Stock moyen (10 - 50)"))
+        fig.add_trace(go.Scatter(x=[None], y=[None], mode='markers', marker=dict(size=12, color="red"), name="Stock faible (< 10)"))
+
+        fig.update_layout(
+            title=f"Répartition des marchands dans {self.nom}",
+            xaxis_title="X",
+            yaxis_title="Y",
+            xaxis=dict(range=[0, self.taille[0]]),
+            yaxis=dict(range=[0, self.taille[1]]),
+            width=1280,
+            height=720
+        )
+
+        return fig
+
+    def __str__(self):
+        """Affiche le graphique quand on imprime l'objet."""
+        self.generer_graphique().show()
+        return f"<EspaceMarche: {self.nom}, {len(self.marchands)} marchands>"
+
 
     @classmethod
-    @inject
-    def find(cls, criteria: dict, mongo_handler: MongoDBHandler = Provide[Container.marche_handler]):
+    def find(cls, criteria: dict):
         """
         Recherche des espaces de marché en fonction des critères spécifiés.
 
         Args:
             criteria (dict): Un dictionnaire de critères de recherche.
-            mongo_handler (MongoDBHandler): Le handler MongoDB injecté automatiquement.
 
         Returns:
-            Cursor: Un curseur MongoDB pour parcourir les documents trouvés.
+            List[dict]: Une liste d'objets d'espace de marché correspondants.
         """
-        return mongo_handler.find(criteria)
+        return cls.objects(**criteria)
 
     @classmethod
-    @inject
-    def find_one(cls, criteria: dict, mongo_handler: MongoDBHandler = Provide[Container.marche_handler]):
+    def find_one(cls, criteria: dict):
         """
         Recherche un seul espace de marché en fonction des critères spécifiés.
 
         Args:
             criteria (dict): Un dictionnaire de critères de recherche.
-            mongo_handler (MongoDBHandler): Le handler MongoDB injecté automatiquement.
 
         Returns:
-            dict: Les données de l'espace de marché trouvé, ou None si aucun espace de marché n'est trouvé.
+            dict: L'espace de marché trouvé, ou None si aucun espace de marché n'est trouvé.
         """
-        return mongo_handler.find_one(criteria)
+        return cls.objects(**criteria).first()
 
     @classmethod
-    @inject
-    def find_by_id(cls, id: str, mongo_handler: MongoDBHandler = Provide[Container.marche_handler]):
+    def find_by_id(cls, id: str):
         """
         Recherche un espace de marché par son ID MongoDB.
 
         Args:
             id (str): L'ID MongoDB de l'espace de marché à rechercher.
-            mongo_handler (MongoDBHandler): Le handler MongoDB injecté automatiquement.
 
         Returns:
-            dict: Les données de l'espace de marché trouvé, ou None si aucun espace de marché n'est trouvé.
+            dict: L'espace de marché trouvé, ou None si aucun espace de marché n'est trouvé.
         """
-        return mongo_handler.find_by_id(ObjectId(id))
+        return cls.objects(id=id).first()
