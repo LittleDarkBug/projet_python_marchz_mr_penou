@@ -9,7 +9,7 @@ Ce projet implémente une plateforme de marché en ligne avec des fonctionnalit�
 
 ### Obligatoires
 
-- Python 3.x
+- Python 3.13.1
 - MongoDB (par défaut)
 - Les packages Python listés dans `requirements.txt`
 
