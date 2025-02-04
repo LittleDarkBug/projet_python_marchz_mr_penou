@@ -92,8 +92,7 @@ Mot de passe : admin
 
 ### Analyse de données
 
-L'option 3 du menu principal lance une analyse des données qui génère des visualisations dans votre navigateur. Les résultats restent affichés pendant 10 secondes avant de revenir au menu principal.
-
+L'option 3 du menu principal lance une analyse des données qui génère des visualisations dans votre navigateur. 
 ## Structure du projet
 
 ```text
